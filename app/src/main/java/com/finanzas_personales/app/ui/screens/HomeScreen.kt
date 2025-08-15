@@ -102,7 +102,7 @@ fun HomeScreen(
         }
       }
 
-      Text("Filtros aquí...", modifier = Modifier.padding(bottom = 8.dp))
+      // Text("Filtros aquí...", modifier = Modifier.padding(bottom = 8.dp))
 
       Text(
               "Movimientos Recientes",
