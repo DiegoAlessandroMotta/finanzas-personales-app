@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "movimientos")
 data class Movimiento(
         @PrimaryKey(autoGenerate = true) val id: Int = 0,
-        val tipo: String,
+        val tipo: MovimientoType,
         val monto: Double,
         val categoria: String,
         val descripcion: String,

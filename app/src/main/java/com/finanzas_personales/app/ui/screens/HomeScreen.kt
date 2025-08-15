@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.finanzas_personales.app.data.Movimiento
+import com.finanzas_personales.app.data.MovimientoType
 import com.finanzas_personales.app.viewmodel.MovimientoViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -28,7 +29,7 @@ import java.util.Locale
 fun HomeScreen(
         viewModel: MovimientoViewModel,
         onAddClick: () -> Unit,
-        onEditClick: (Int) -> Unit // Recibe el ID del movimiento a editar
+        onEditClick: (Int) -> Unit
 ) {
   // val allMovimientos by viewModel.allMovimientos.collectAsState()
   val totalIngresos by viewModel.totalIngresos.collectAsState()
@@ -66,7 +67,7 @@ fun HomeScreen(
             Text("Ingresos:", fontWeight = FontWeight.SemiBold)
             Text(
                     "S/ ${"%.2f".format(totalIngresos ?: 0.0)}",
-                    color = Color.Green,
+                    color = Color.LightGray,
                     fontWeight = FontWeight.Bold
             )
           }
@@ -78,7 +79,7 @@ fun HomeScreen(
             Text("Egresos:", fontWeight = FontWeight.SemiBold)
             Text(
                     "S/ ${"%.2f".format(totalEgresos ?: 0.0)}",
-                    color = Color.Red,
+                    color = MaterialTheme.colorScheme.error,
                     fontWeight = FontWeight.Bold
             )
           }
@@ -93,7 +94,7 @@ fun HomeScreen(
             val saldoNeto = (totalIngresos ?: 0.0) - (totalEgresos ?: 0.0)
             Text(
                     "S/ ${"%.2f".format(saldoNeto)}",
-                    color = if (saldoNeto >= 0) Color.Blue else Color.Red,
+                    color = if (saldoNeto >= 0) Color.White else MaterialTheme.colorScheme.error,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 18.sp
             )
@@ -149,20 +150,20 @@ fun MovimientoItem(movimiento: Movimiento, onEditClick: () -> Unit, onDeleteClic
         Text(text = formatDate(movimiento.fecha), style = MaterialTheme.typography.bodySmall)
       }
       Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
-        val textColor = if (movimiento.tipo == "Ingreso") Color.Green else Color.Red
+        val textColor = if (movimiento.tipo == MovimientoType.INGRESO) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error
         Text(
                 text =
-                        "${if (movimiento.tipo == "Ingreso") "+" else "-"} S/ ${"%.2f".format(movimiento.monto)}",
+                        "${if (movimiento.tipo == MovimientoType.INGRESO) "+" else "-"} S/ ${"%.2f".format(movimiento.monto)}",
                 fontWeight = FontWeight.ExtraBold,
                 color = textColor,
                 fontSize = 18.sp
         )
         Row {
           IconButton(onClick = onEditClick) {
-            Icon(Icons.Filled.Edit, "Editar", tint = MaterialTheme.colorScheme.primary)
+            Icon(Icons.Filled.Edit, "Editar", tint = Color.LightGray)
           }
           IconButton(onClick = onDeleteClick) {
-            Icon(Icons.Filled.Delete, "Eliminar", tint = MaterialTheme.colorScheme.error)
+            Icon(Icons.Filled.Delete, "Eliminar", tint = Color.LightGray)
           }
         }
       }

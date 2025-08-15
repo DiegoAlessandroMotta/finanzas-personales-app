@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.finanzas_personales.app.data.Movimiento
+import com.finanzas_personales.app.data.MovimientoType
 import com.finanzas_personales.app.repository.MovimientoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -63,12 +64,12 @@ class MovimientoViewModel(private val repository: MovimientoRepository) : ViewMo
     viewModelScope.launch { repository.allMovimientos.collect { _filteredMovimientos.value = it } }
   }
 
-  fun filterByType(tipo: String?) {
+  fun filterByType(tipo: MovimientoType?) {
     viewModelScope.launch {
-      if (tipo.isNullOrBlank()) {
+      if (tipo == null) {
         _filteredMovimientos.value = repository.allMovimientos.first()
       } else {
-        repository.getMovimientosByTipo(tipo).collect { _filteredMovimientos.value = it }
+        repository.getMovimientosByTipo(tipo.value).collect { _filteredMovimientos.value = it }
       }
     }
   }

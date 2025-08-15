@@ -1,5 +1,6 @@
 package com.finanzas_personales.app.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -7,9 +8,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.finanzas_personales.app.data.Movimiento
+import com.finanzas_personales.app.data.MovimientoType
 import com.finanzas_personales.app.viewmodel.MovimientoViewModel
 import kotlinx.coroutines.launch
 
@@ -20,8 +23,9 @@ fun MovimientoFormScreen(
         movimientoId: Int?,
         onBackClick: () -> Unit
 ) {
-  val scope = rememberCoroutineScope()
-  var tipo by remember { mutableStateOf("Ingreso") } // "Ingreso" o "Egreso"
+  val context = LocalContext.current
+  // val scope = rememberCoroutineScope()
+  var tipo by remember { mutableStateOf(MovimientoType.INGRESO) }
   var monto by remember { mutableStateOf("") }
   var categoria by remember { mutableStateOf("") }
   var descripcion by remember { mutableStateOf("") }
@@ -36,10 +40,8 @@ fun MovimientoFormScreen(
     }
   }
 
-  // Observar el movimiento actual desde el ViewModel
   val currentMovimiento by viewModel.currentMovimiento.collectAsState()
 
-  // Rellenar campos si currentMovimiento cambia (cuando se carga para edición)
   LaunchedEffect(currentMovimiento) {
     currentMovimiento?.let { mov ->
       originalMovimientoId = mov.id
@@ -49,6 +51,7 @@ fun MovimientoFormScreen(
       descripcion = mov.descripcion
     }?: run {
       originalMovimientoId = null
+      tipo = MovimientoType.INGRESO
     }
   }
 
@@ -70,17 +73,16 @@ fun MovimientoFormScreen(
           }
   ) { paddingValues ->
     Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
-      // Selector de Tipo (Ingreso/Egreso)
       Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
         FilterChip(
-          selected = tipo == "Ingreso",
-          onClick = { tipo = "Ingreso" },
+          selected = tipo == MovimientoType.INGRESO,
+          onClick = { tipo = MovimientoType.INGRESO },
           label = { Text("Ingreso") },
           modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
         )
         FilterChip(
-          selected = tipo == "Egreso",
-          onClick = { tipo = "Egreso" },
+          selected = tipo == MovimientoType.EGRESO,
+          onClick = { tipo = MovimientoType.EGRESO },
           label = { Text("Egreso") },
           modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
         )
@@ -90,7 +92,6 @@ fun MovimientoFormScreen(
       OutlinedTextField(
               value = monto,
               onValueChange = { newValue ->
-                // Validar que solo se ingresen números y un solo punto decimal
                 if (newValue.matches(Regex("^\\d*\\.?\\d*\$"))) {
                   monto = newValue
                 }
@@ -119,35 +120,41 @@ fun MovimientoFormScreen(
 
       Button(
               onClick = {
-                val currentMonto = monto.toDoubleOrNull()
-                if (currentMonto != null &&
-                                currentMonto > 0 &&
-                                categoria.isNotBlank() &&
-                                descripcion.isNotBlank()
-                ) {
+                val montoDouble = monto.toDoubleOrNull()
+                if (montoDouble == null || montoDouble <= 0) {
+                  Toast.makeText(
+                    context,
+                    "Por favor, introduce un monto válido.",
+                    Toast.LENGTH_SHORT
+                  )
+                    .show()
+                } else if (descripcion.isBlank()) {
+                  Toast.makeText(
+                    context,
+                    "La descripción no puede estar vacía.",
+                    Toast.LENGTH_SHORT
+                  )
+                    .show()
+                } else if (categoria.isBlank()) {
+                  Toast.makeText(context, "La categoría no puede estar vacía.", Toast.LENGTH_SHORT)
+                    .show()
+                } else {
                   val newMovimiento =
-                          Movimiento(
-                              id = originalMovimientoId ?: 0,
-                              tipo = tipo,
-                              monto = currentMonto,
-                              categoria = categoria,
-                              descripcion = descripcion,
-                              fecha = currentMovimiento?.fecha ?: System.currentTimeMillis()
-                          )
+                    Movimiento(
+                      id = originalMovimientoId ?: 0,
+                      tipo = tipo,
+                      monto = montoDouble,
+                      categoria = categoria,
+                      descripcion = descripcion,
+                      fecha = currentMovimiento?.fecha ?: System.currentTimeMillis()
+                    )
                   if (movimientoId == null || movimientoId == 0) {
                     viewModel.addMovimiento(newMovimiento)
                   } else {
                     viewModel.updateMovimiento(newMovimiento)
                   }
+                  Toast.makeText(context, "Movimiento guardado!", Toast.LENGTH_SHORT).show()
                   onBackClick()
-                } else {
-                  // scope.launch {
-                    // ScaffoldState.snackbarHostState.showSnackbar(message = "Rellena todos los campos")
-                    // val snackbarResult = scaffoldState.snackbarHostState.showSnackbar(
-                    //     message = "Por favor, rellena todos los campos y asegúrate de que el monto sea válido.",
-                    //     actionLabel = "Ok"
-                    // )
-                  // }
                 }
               },
               modifier = Modifier.fillMaxWidth()
