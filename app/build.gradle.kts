@@ -69,5 +69,9 @@ dependencies {
   implementation("androidx.compose.material3:material3-window-size-class")
   implementation("androidx.compose.material:material-icons-extended:1.6.0-alpha06")
 
+  val nav_version = "2.9.3"
+
+  implementation("androidx.navigation:navigation-compose:$nav_version")
+
   coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 }
