@@ -26,9 +26,10 @@ fun MovimientoFormScreen(
   var categoria by remember { mutableStateOf("") }
   var descripcion by remember { mutableStateOf("") }
 
-  // Cargar datos si estamos en modo edición
+  var originalMovimientoId: Int? by remember { mutableStateOf(null) }
+
   LaunchedEffect(movimientoId) {
-    if (movimientoId != null && movimientoId != 0) { // 0 es el valor por defecto para nuevos
+    if (movimientoId != null && movimientoId != 0) {
       viewModel.loadMovimientoForEdit(movimientoId)
     } else {
       viewModel.clearCurrentMovimiento()
@@ -41,10 +42,13 @@ fun MovimientoFormScreen(
   // Rellenar campos si currentMovimiento cambia (cuando se carga para edición)
   LaunchedEffect(currentMovimiento) {
     currentMovimiento?.let { mov ->
+      originalMovimientoId = mov.id
       tipo = mov.tipo
       monto = mov.monto.toString()
       categoria = mov.categoria
       descripcion = mov.descripcion
+    }?: run {
+      originalMovimientoId = null
     }
   }
 
@@ -68,34 +72,18 @@ fun MovimientoFormScreen(
     Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
       // Selector de Tipo (Ingreso/Egreso)
       Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-        OutlinedButton(
-                onClick = { tipo = "Ingreso" },
-                modifier = Modifier.weight(1f),
-                // colors =
-                //         ButtonDefaults.outlinedButtonColors(
-                //                 containerColor =
-                //                         if (tipo == "Ingreso") MaterialTheme.colorScheme.primary
-                //                         else Color.Transparent,
-                //                 contentColor =
-                //                         if (tipo == "Ingreso")
-                // MaterialTheme.colorScheme.onPrimary
-                //                         else MaterialTheme.colorScheme.onSurface
-                //         )
-                ) { Text("Ingreso") }
-        Spacer(modifier = Modifier.width(8.dp))
-        OutlinedButton(
-                onClick = { tipo = "Egreso" },
-                modifier = Modifier.weight(1f),
-                // colors =
-                //         ButtonDefaults.outlinedButtonColors(
-                //                 containerColor =
-                //                         if (tipo == "Egreso") MaterialTheme.colorScheme.error
-                //                         else Color.Transparent,
-                //                 contentColor =
-                //                         if (tipo == "Egreso") MaterialTheme.colorScheme.onError
-                //                         else MaterialTheme.colorScheme.onSurface
-                //         )
-                ) { Text("Egreso") }
+        FilterChip(
+          selected = tipo == "Ingreso",
+          onClick = { tipo = "Ingreso" },
+          label = { Text("Ingreso") },
+          modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
+        )
+        FilterChip(
+          selected = tipo == "Egreso",
+          onClick = { tipo = "Egreso" },
+          label = { Text("Egreso") },
+          modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
+        )
       }
       Spacer(modifier = Modifier.height(16.dp))
 
@@ -139,25 +127,27 @@ fun MovimientoFormScreen(
                 ) {
                   val newMovimiento =
                           Movimiento(
-                                  tipo = tipo,
-                                  monto = currentMonto,
-                                  categoria = categoria,
-                                  descripcion = descripcion,
-                                  fecha = System.currentTimeMillis()
+                              id = originalMovimientoId ?: 0,
+                              tipo = tipo,
+                              monto = currentMonto,
+                              categoria = categoria,
+                              descripcion = descripcion,
+                              fecha = currentMovimiento?.fecha ?: System.currentTimeMillis()
                           )
                   if (movimientoId == null || movimientoId == 0) {
                     viewModel.addMovimiento(newMovimiento)
                   } else {
                     viewModel.updateMovimiento(newMovimiento)
                   }
-                  onBackClick() // Volver a la pantalla anterior
+                  onBackClick()
                 } else {
-                  // Aquí podrías mostrar un SnackBar o un Toast para el usuario
-                  // indicando que faltan campos o el monto es inválido
-                  scope.launch {
-                    // ScaffoldState.snackbarHostState.showSnackbar(message = "Rellena todos los
-                    // campos")
-                  }
+                  // scope.launch {
+                    // ScaffoldState.snackbarHostState.showSnackbar(message = "Rellena todos los campos")
+                    // val snackbarResult = scaffoldState.snackbarHostState.showSnackbar(
+                    //     message = "Por favor, rellena todos los campos y asegúrate de que el monto sea válido.",
+                    //     actionLabel = "Ok"
+                    // )
+                  // }
                 }
               },
               modifier = Modifier.fillMaxWidth()
