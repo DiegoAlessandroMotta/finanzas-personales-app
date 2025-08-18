@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.finanzas_personales.app.data.Movimiento
 import com.finanzas_personales.app.data.MovimientoType
+import com.finanzas_personales.app.viewmodel.CategoriaViewModel
 import com.finanzas_personales.app.viewmodel.MovimientoViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -34,42 +35,56 @@ import kotlin.time.Duration.Companion.hours
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MovimientoFormScreen(
-        viewModel: MovimientoViewModel,
+        movimientoViewModel: MovimientoViewModel,
+        categoriaViewModel: CategoriaViewModel,
         movimientoId: Int?,
         onBackClick: () -> Unit
 ) {
   val context = LocalContext.current
-  // val scope = rememberCoroutineScope()
+  val scope = rememberCoroutineScope()
   var tipo by remember { mutableStateOf(MovimientoType.INGRESO) }
   var monto by remember { mutableStateOf("") }
-  var categoria by remember { mutableStateOf("") }
   var descripcion by remember { mutableStateOf("") }
   var originalMovimientoId: Int? by remember { mutableStateOf(null) }
+
+  var selectedCategoryName by remember { mutableStateOf("") }
+  val allCategorias by categoriaViewModel.allActiveCategorias.collectAsState()
+  var expanded by remember { mutableStateOf(false) }
 
   var showDatePicker by remember { mutableStateOf(false) }
   var fechaSeleccionadaMillis by remember { mutableStateOf(getStartOfDayMillis(System.currentTimeMillis())) }
 
   LaunchedEffect(movimientoId) {
     if (movimientoId != null && movimientoId != 0) {
-      viewModel.loadMovimientoForEdit(movimientoId)
+      movimientoViewModel.loadMovimientoForEdit(movimientoId)
     } else {
-      viewModel.clearCurrentMovimiento()
+      movimientoViewModel.clearCurrentMovimiento()
     }
   }
 
-  val currentMovimiento by viewModel.currentMovimiento.collectAsState()
+  LaunchedEffect(allCategorias) {
+    if (selectedCategoryName.isBlank() && allCategorias.isNotEmpty()) {
+      selectedCategoryName = allCategorias.first().nombre
+    } else if (allCategorias.none { it.nombre == selectedCategoryName }) {
+      selectedCategoryName = allCategorias.firstOrNull()?.nombre ?: ""
+    }
+  }
+
+  val currentMovimiento by movimientoViewModel.currentMovimiento.collectAsState()
 
   LaunchedEffect(currentMovimiento) {
     currentMovimiento?.let { mov ->
       originalMovimientoId = mov.id
       tipo = mov.tipo
       monto = mov.monto.toString()
-      categoria = mov.categoria
+      selectedCategoryName = mov.categoria
       descripcion = mov.descripcion
       fechaSeleccionadaMillis = getStartOfDayMillis(mov.fecha)
     }?: run {
       originalMovimientoId = null
       tipo = MovimientoType.INGRESO
+      selectedCategoryName = allCategorias.firstOrNull()?.nombre ?: ""
+      descripcion = ""
       fechaSeleccionadaMillis = getStartOfDayMillis(System.currentTimeMillis())
     }
   }
@@ -123,12 +138,47 @@ fun MovimientoFormScreen(
       )
       Spacer(modifier = Modifier.height(8.dp))
 
-      OutlinedTextField(
-              value = categoria,
-              onValueChange = { categoria = it },
-              label = { Text("Categoría (ej: Salario, Comida, Transporte)") },
-              modifier = Modifier.fillMaxWidth()
-      )
+      ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = Modifier.fillMaxWidth()
+      ) {
+        OutlinedTextField(
+          value = selectedCategoryName,
+          onValueChange = { },
+          readOnly = true,
+          label = { Text("Categoría") },
+          trailingIcon = {
+            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+          },
+          modifier = Modifier
+            //.menuAnchor(type, enabled)
+            .fillMaxWidth()
+        )
+
+        ExposedDropdownMenu(
+          expanded = expanded,
+          onDismissRequest = { expanded = false }
+        ) {
+          if (allCategorias.isEmpty()) {
+            DropdownMenuItem(
+              text = { Text("No hay categorías. Crea una primero.") },
+              onClick = { expanded = false },
+              enabled = false
+            )
+          } else {
+            allCategorias.forEach { categoria ->
+              DropdownMenuItem(
+                text = { Text(categoria.nombre) },
+                onClick = {
+                  selectedCategoryName = categoria.nombre
+                  expanded = false
+                }
+              )
+            }
+          }
+        }
+      }
       Spacer(modifier = Modifier.height(8.dp))
 
       OutlinedTextField(
@@ -195,15 +245,8 @@ fun MovimientoFormScreen(
                     Toast.LENGTH_SHORT
                   )
                     .show()
-                } else if (descripcion.isBlank()) {
-                  Toast.makeText(
-                    context,
-                    "La descripción no puede estar vacía.",
-                    Toast.LENGTH_SHORT
-                  )
-                    .show()
-                } else if (categoria.isBlank()) {
-                  Toast.makeText(context, "La categoría no puede estar vacía.", Toast.LENGTH_SHORT)
+                } else if (selectedCategoryName.isBlank()) {
+                  Toast.makeText(context, "Debe seleccionar una categoría.", Toast.LENGTH_SHORT)
                     .show()
                 } else {
                   val finalMovimientoTimestamp = combineDateWithCurrentTime(fechaSeleccionadaMillis)
@@ -213,14 +256,14 @@ fun MovimientoFormScreen(
                       id = originalMovimientoId ?: 0,
                       tipo = tipo,
                       monto = montoDouble,
-                      categoria = categoria,
+                      categoria = selectedCategoryName,
                       descripcion = descripcion,
                       fecha = currentMovimiento?.fecha ?: finalMovimientoTimestamp
                     )
                   if (movimientoId == null || movimientoId == 0) {
-                    viewModel.addMovimiento(newMovimiento)
+                    movimientoViewModel.addMovimiento(newMovimiento)
                   } else {
-                    viewModel.updateMovimiento(newMovimiento)
+                    movimientoViewModel.updateMovimiento(newMovimiento)
                   }
                   Toast.makeText(context, "Movimiento guardado!", Toast.LENGTH_SHORT).show()
                   onBackClick()

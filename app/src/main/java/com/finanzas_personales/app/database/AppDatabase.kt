@@ -5,12 +5,18 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.finanzas_personales.app.data.Categoria
 import com.finanzas_personales.app.data.Movimiento
 
-@Database(entities = [Movimiento::class], version = 1, exportSchema = false)
+@Database(
+  entities = [Movimiento::class, Categoria::class],
+  version = 1,
+  exportSchema = false
+)
 @TypeConverters(MovimientoTypeConverter::class)
 abstract class AppDatabase : RoomDatabase() {
   abstract fun movimientoDao(): MovimientoDao
+  abstract fun categoriaDao(): CategoriaDao
 
   companion object {
     @Volatile private var INSTANCE: AppDatabase? = null
@@ -24,8 +30,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "finanzas_personales_db"
                   )
-                  .addTypeConverter(MovimientoTypeConverter())
-                  .build()
+                    .addTypeConverter(MovimientoTypeConverter())
+                    .build()
                 INSTANCE = instance
                 instance
               }

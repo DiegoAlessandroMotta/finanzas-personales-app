@@ -9,6 +9,6 @@ data class Movimiento(
         val tipo: MovimientoType,
         val monto: Double,
         val categoria: String,
-        val descripcion: String,
+        val descripcion: String = "",
         val fecha: Long
 )

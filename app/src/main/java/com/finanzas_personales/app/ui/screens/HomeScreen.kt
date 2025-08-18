@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.finanzas_personales.app.data.Movimiento
 import com.finanzas_personales.app.data.MovimientoType
+import com.finanzas_personales.app.viewmodel.CategoriaViewModel
 import com.finanzas_personales.app.viewmodel.MovimientoViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -27,21 +29,33 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-        viewModel: MovimientoViewModel,
-        onAddClick: () -> Unit,
-        onEditClick: (Int) -> Unit
+  movimientoViewModel: MovimientoViewModel,
+  categoriaViewModel: CategoriaViewModel,
+  onAddClick: () -> Unit,
+  onEditClick: (Int) -> Unit,
+  onManageCategoriesClick: () -> Unit
 ) {
   // val allMovimientos by viewModel.allMovimientos.collectAsState()
-  val totalIngresos by viewModel.totalIngresos.collectAsState()
-  val totalEgresos by viewModel.totalEgresos.collectAsState()
-  val filteredMovimientos by viewModel.filteredMovimientos.collectAsState()
+  val totalIngresos by movimientoViewModel.totalIngresos.collectAsState()
+  val totalEgresos by movimientoViewModel.totalEgresos.collectAsState()
+  val filteredMovimientos by movimientoViewModel.filteredMovimientos.collectAsState()
 
   Scaffold(
-          topBar = { TopAppBar(title = { Text(
-            text = "Finanzas Personales",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-          ) }) },
+          topBar = {
+            TopAppBar(
+              title = {
+                Text(
+                  text = "Finanzas Personales",
+                  style = MaterialTheme.typography.titleLarge,
+                  fontWeight = FontWeight.Bold
+                )
+              },
+              actions = {
+                  IconButton(onClick = onManageCategoriesClick) {
+                    Icon(Icons.Filled.Category, contentDescription = "Gestionar Categorías")
+                  }
+                }
+          ) },
           floatingActionButton = {
             FloatingActionButton(onClick = onAddClick) {
               Icon(Icons.Filled.Add, "Añadir nuevo movimiento")
@@ -122,7 +136,7 @@ fun HomeScreen(
             MovimientoItem(
                     movimiento = movimiento,
                     onEditClick = { onEditClick(movimiento.id) },
-                    onDeleteClick = { viewModel.deleteMovimiento(movimiento) }
+                    onDeleteClick = { movimientoViewModel.deleteMovimiento(movimiento) }
             )
           }
         }

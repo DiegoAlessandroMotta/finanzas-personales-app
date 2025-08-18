@@ -16,10 +16,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.finanzas_personales.app.database.AppDatabase
+import com.finanzas_personales.app.repository.CategoriaRepository
 import com.finanzas_personales.app.repository.MovimientoRepository
+import com.finanzas_personales.app.ui.screens.CategoriasScreen
 import com.finanzas_personales.app.ui.screens.HomeScreen
 import com.finanzas_personales.app.ui.screens.MovimientoFormScreen
 import com.finanzas_personales.app.ui.theme.FinanzasPersonalesTheme
+import com.finanzas_personales.app.viewmodel.CategoriaViewModel
+import com.finanzas_personales.app.viewmodel.CategoriaViewModelFactory
 import com.finanzas_personales.app.viewmodel.MovimientoViewModel
 import com.finanzas_personales.app.viewmodel.MovimientoViewModelFactory
 
@@ -34,13 +38,21 @@ class MainActivity : ComponentActivity() {
           color = MaterialTheme.colorScheme.background
         ) {
           val database = AppDatabase.getDatabase(applicationContext)
-          val repository = MovimientoRepository(database.movimientoDao())
 
-          val viewModel: MovimientoViewModel = viewModel(
-            factory = MovimientoViewModelFactory(repository)
+          val movimientoRepository = MovimientoRepository(database.movimientoDao())
+          val categoriaRepository = CategoriaRepository(database.categoriaDao())
+
+          val movimientoViewModel: MovimientoViewModel = viewModel(
+            factory = MovimientoViewModelFactory(movimientoRepository)
+          )
+          val categoriaViewModel: CategoriaViewModel = viewModel(
+            factory = CategoriaViewModelFactory(categoriaRepository)
           )
 
-          ControlFinancieroApp(viewModel = viewModel)
+          ControlFinancieroApp(
+            movimientoViewModel = movimientoViewModel,
+            categoriaViewModel = categoriaViewModel
+          )
         }
       }
     }
@@ -48,22 +60,28 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ControlFinancieroApp(viewModel: MovimientoViewModel) {
+fun ControlFinancieroApp(
+  movimientoViewModel: MovimientoViewModel,
+  categoriaViewModel: CategoriaViewModel
+) {
   val navController = rememberNavController()
 
   NavHost(navController = navController, startDestination = "home") {
     composable("home") {
       HomeScreen(
-              viewModel = viewModel,
-              onAddClick = { navController.navigate("add_movimiento") },
-              onEditClick = { id -> navController.navigate("edit_movimiento/$id") }
+        movimientoViewModel = movimientoViewModel,
+        categoriaViewModel = categoriaViewModel,
+        onAddClick = { navController.navigate("add_movimiento") },
+        onEditClick = { id -> navController.navigate("edit_movimiento/$id") },
+        onManageCategoriesClick = { navController.navigate("manage_categories") }
       )
     }
     composable("add_movimiento") { backStackEntry ->
       MovimientoFormScreen(
-              viewModel = viewModel,
-              movimientoId = null,
-              onBackClick = { navController.popBackStack() }
+        movimientoViewModel = movimientoViewModel,
+        categoriaViewModel = categoriaViewModel,
+        movimientoId = null,
+        onBackClick = { navController.popBackStack() }
       )
     }
     composable(
@@ -72,9 +90,16 @@ fun ControlFinancieroApp(viewModel: MovimientoViewModel) {
     ) { backStackEntry ->
       val movimientoId = backStackEntry.arguments?.getInt("movimientoId")
       MovimientoFormScreen(
-              viewModel = viewModel,
-              movimientoId = movimientoId,
-              onBackClick = { navController.popBackStack() }
+        movimientoViewModel = movimientoViewModel,
+        categoriaViewModel = categoriaViewModel,
+        movimientoId = movimientoId,
+        onBackClick = { navController.popBackStack() }
+      )
+    }
+    composable("manage_categories") {
+      CategoriasScreen(
+        categoriaViewModel = categoriaViewModel,
+        onBackClick = { navController.popBackStack() }
       )
     }
   }
