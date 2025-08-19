@@ -23,14 +23,17 @@ class CategoriaViewModel(private val repository: CategoriaRepository) : ViewMode
 	private val _currentCategoria = MutableStateFlow<Categoria?>(null)
 	val currentCategoria: StateFlow<Categoria?> = _currentCategoria.asStateFlow()
 
+	private val _message = MutableStateFlow<String?>(null)
+	val message: StateFlow<String?> = _message.asStateFlow()
+
 	fun addCategoria(nombre: String) {
 		viewModelScope.launch {
 			val existingCategoria = repository.getCategoriaByName(nombre)
 			if (existingCategoria == null) {
 				repository.insert(Categoria(nombre = nombre))
+				_message.value = "Categoría '${nombre}' añadida."
 			} else {
-				// Manejar error: la categoría ya existe
-				// Podrías exponer un StateFlow<String?> para mensajes de error
+				_message.value = "Error: La categoría '${nombre}' ya existe."
 			}
 		}
 	}
@@ -38,22 +41,28 @@ class CategoriaViewModel(private val repository: CategoriaRepository) : ViewMode
 	fun updateCategoria(categoria: Categoria) {
 		viewModelScope.launch {
 			repository.update(categoria)
+			_message.value = "Categoría '${categoria.nombre}' actualizada."
 		}
 	}
 
 	fun deleteCategoria(categoria: Categoria) {
 		viewModelScope.launch {
-			val movimientosCount = repository.countMovimientosByCategoria(categoria.nombre)
-			if (movimientosCount == 0) {
-				repository.softDelete(categoria.id)
-			} else {
-				// Manejar error: No se puede eliminar si hay movimientos vinculados
-				// Podrías exponer un StateFlow<String?> para mensajes de error
+			try {
+				val movimientosCount = repository.countMovimientosByCategoria(categoria.id)
+				if (movimientosCount == 0) {
+					repository.softDelete(categoria.id)
+					_message.value = "Categoría '${categoria.nombre}' eliminada."
+				} else {
+					_message.value = "No se puede eliminar '${categoria.nombre}': tiene $movimientosCount movimiento(s) vinculado(s)."
+				}
+			} catch (e: Exception) {
+				_message.value = "Error desconocido al eliminar categoría"
 			}
 		}
 	}
 
 	fun loadCategoriaForEdit(categoria: Categoria) {
+		_currentCategoria.value = null
 		_currentCategoria.value = categoria
 	}
 

@@ -24,7 +24,7 @@ class CategoriaRepository(private val categoriaDao: CategoriaDao) {
 		return categoriaDao.getCategoriaByName(nombre)
 	}
 
-	suspend fun countMovimientosByCategoria(categoriaNombre: String): Int {
-		return categoriaDao.countMovimientosByCategoria(categoriaNombre)
+	suspend fun countMovimientosByCategoria(categoriaId: Int): Int {
+		return categoriaDao.countMovimientosByCategoria(categoriaId)
 	}
 }

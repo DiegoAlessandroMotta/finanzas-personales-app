@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.finanzas_personales.app.data.Movimiento
+import com.finanzas_personales.app.data.MovimientoCategoria
 import com.finanzas_personales.app.data.MovimientoType
 import com.finanzas_personales.app.repository.MovimientoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class MovimientoViewModel(private val repository: MovimientoRepository) : ViewModel() {
-  val allMovimientos: StateFlow<List<Movimiento>> =
+  val allMovimientos: StateFlow<List<MovimientoCategoria>> =
           repository.allMovimientos.stateIn(
                   viewModelScope,
                   started = SharingStarted.WhileSubscribed(5000),
@@ -36,6 +37,17 @@ class MovimientoViewModel(private val repository: MovimientoRepository) : ViewMo
 
   private val _currentMovimiento = MutableStateFlow<Movimiento?>(null)
   val currentMovimiento: StateFlow<Movimiento?> = _currentMovimiento.asStateFlow()
+
+  private val _filteredMovimientosCategorias = MutableStateFlow<List<MovimientoCategoria>>(emptyList())
+  val filteredMovimientosCategorias: StateFlow<List<MovimientoCategoria>> = _filteredMovimientosCategorias.asStateFlow()
+
+  init {
+    viewModelScope.launch {
+      repository.allMovimientos.collect {
+        _filteredMovimientosCategorias.value = it
+      }
+    }
+  }
 
   fun addMovimiento(movimiento: Movimiento) {
     viewModelScope.launch { repository.insert(movimiento) }
@@ -61,25 +73,25 @@ class MovimientoViewModel(private val repository: MovimientoRepository) : ViewMo
   val filteredMovimientos: StateFlow<List<Movimiento>> = _filteredMovimientos.asStateFlow()
 
   init {
-    viewModelScope.launch { repository.allMovimientos.collect { _filteredMovimientos.value = it } }
+    viewModelScope.launch { repository.allMovimientos.collect { _filteredMovimientosCategorias.value = it } }
   }
 
   fun filterByType(tipo: MovimientoType?) {
     viewModelScope.launch {
       if (tipo == null) {
-        _filteredMovimientos.value = repository.allMovimientos.first()
+        _filteredMovimientosCategorias.value = repository.allMovimientos.first()
       } else {
         repository.getMovimientosByTipo(tipo.value).collect { _filteredMovimientos.value = it }
       }
     }
   }
 
-  fun filterByCategory(categoria: String?) {
+  fun filterByCategory(categoriaId: Int?) {
     viewModelScope.launch {
-      if (categoria.isNullOrBlank()) {
-        _filteredMovimientos.value = repository.allMovimientos.first()
+      if (categoriaId == null) {
+        _filteredMovimientosCategorias.value = repository.allMovimientos.first()
       } else {
-        repository.getMovimientosByCategoria(categoria).collect { _filteredMovimientos.value = it }
+        repository.getMovimientosByCategoria(categoriaId).collect { _filteredMovimientos.value = it }
       }
     }
   }

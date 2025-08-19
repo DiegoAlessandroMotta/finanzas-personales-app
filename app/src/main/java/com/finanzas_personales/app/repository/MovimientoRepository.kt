@@ -1,12 +1,13 @@
 package com.finanzas_personales.app.repository
 
 import com.finanzas_personales.app.data.Movimiento
+import com.finanzas_personales.app.data.MovimientoCategoria
 import com.finanzas_personales.app.database.MovimientoDao
 import kotlinx.coroutines.flow.Flow
 
 class MovimientoRepository(private val movimientoDao: MovimientoDao) {
 
-  val allMovimientos: Flow<List<Movimiento>> = movimientoDao.getAllMovimientos()
+  val allMovimientos: Flow<List<MovimientoCategoria>> = movimientoDao.getAllMovimientosCategorias()
   val totalIngresos: Flow<Double?> = movimientoDao.getTotalIngresos()
   val totalEgresos: Flow<Double?> = movimientoDao.getTotalEgresos()
 
@@ -30,7 +31,15 @@ class MovimientoRepository(private val movimientoDao: MovimientoDao) {
     return movimientoDao.getMovimientosByTipo(tipo)
   }
 
-  fun getMovimientosByCategoria(categoria: String): Flow<List<Movimiento>> {
-    return movimientoDao.getMovimientosByCategoria(categoria)
+  fun getMovimientosByCategoria(categoriaId: Int): Flow<List<Movimiento>> {
+    return movimientoDao.getMovimientosByCategoria(categoriaId)
+  }
+
+  fun getMovimientosByTipoConCategorias(tipo: String): Flow<List<MovimientoCategoria>> {
+    return movimientoDao.getMovimientosByTipoCategorias(tipo)
+  }
+
+  fun getMovimientosByCategoriaIdConCategorias(categoriaId: Int): Flow<List<MovimientoCategoria>> {
+    return movimientoDao.getMovimientosByCategoriaIdCategorias(categoriaId)
   }
 }

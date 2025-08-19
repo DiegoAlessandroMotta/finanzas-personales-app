@@ -88,7 +88,10 @@ fun CategoriasScreen(
 
 		if (showAddEditDialog) {
 			AlertDialog(
-				onDismissRequest = { showAddEditDialog = false },
+				onDismissRequest = {
+					showAddEditDialog = false
+					categoriaViewModel.clearCurrentCategoria()
+			  },
 				title = { Text(if (isEditMode) "Editar Categoría" else "Añadir Nueva Categoría") },
 				text = {
 					OutlinedTextField(
@@ -108,6 +111,7 @@ fun CategoriasScreen(
 							}
 							showAddEditDialog = false
 							categoriaNombreInput = ""
+							categoriaViewModel.clearCurrentCategoria()
 						}
 					}) { Text(if (isEditMode) "Actualizar" else "Guardar") }
 				},

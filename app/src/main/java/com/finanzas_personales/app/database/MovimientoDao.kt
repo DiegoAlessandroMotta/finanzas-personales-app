@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.finanzas_personales.app.data.Movimiento
+import com.finanzas_personales.app.data.MovimientoCategoria
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -20,14 +21,23 @@ interface MovimientoDao {
   @Query("SELECT * FROM movimientos ORDER BY fecha DESC")
   fun getAllMovimientos(): Flow<List<Movimiento>>
 
+  @Query("SELECT * FROM movimientos ORDER BY fecha DESC")
+  fun getAllMovimientosCategorias(): Flow<List<MovimientoCategoria>>
+
   @Query("SELECT * FROM movimientos WHERE id = :id")
   suspend fun getMovimientoById(id: Int): Movimiento?
 
   @Query("SELECT * FROM movimientos WHERE tipo = :tipo ORDER BY fecha DESC")
+  fun getMovimientosByTipoCategorias(tipo: String): Flow<List<MovimientoCategoria>>
+
+  @Query("SELECT * FROM movimientos WHERE categoriaId = :categoriaId ORDER BY fecha DESC")
+  fun getMovimientosByCategoriaIdCategorias(categoriaId: Int): Flow<List<MovimientoCategoria>>
+
+  @Query("SELECT * FROM movimientos WHERE tipo = :tipo ORDER BY fecha DESC")
   fun getMovimientosByTipo(tipo: String): Flow<List<Movimiento>>
 
-  @Query("SELECT * FROM movimientos WHERE categoria = :categoria ORDER BY fecha DESC")
-  fun getMovimientosByCategoria(categoria: String): Flow<List<Movimiento>>
+  @Query("SELECT * FROM movimientos WHERE categoriaId = :categoriaId ORDER BY fecha DESC")
+  fun getMovimientosByCategoria(categoriaId: Int): Flow<List<Movimiento>>
 
   @Query("SELECT SUM(monto) FROM movimientos WHERE tipo = 'Ingreso'")
   fun getTotalIngresos(): Flow<Double?>

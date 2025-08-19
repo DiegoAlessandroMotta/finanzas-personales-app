@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.finanzas_personales.app.data.Movimiento
+import com.finanzas_personales.app.data.MovimientoCategoria
 import com.finanzas_personales.app.data.MovimientoType
 import com.finanzas_personales.app.viewmodel.CategoriaViewModel
 import com.finanzas_personales.app.viewmodel.MovimientoViewModel
@@ -38,7 +38,7 @@ fun HomeScreen(
   // val allMovimientos by viewModel.allMovimientos.collectAsState()
   val totalIngresos by movimientoViewModel.totalIngresos.collectAsState()
   val totalEgresos by movimientoViewModel.totalEgresos.collectAsState()
-  val filteredMovimientos by movimientoViewModel.filteredMovimientos.collectAsState()
+  val filteredMovimientos by movimientoViewModel.filteredMovimientosCategorias.collectAsState()
 
   Scaffold(
           topBar = {
@@ -132,9 +132,10 @@ fun HomeScreen(
         )
       } else {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-          items(filteredMovimientos) { movimiento ->
+          items(filteredMovimientos) { movimientoCategoria ->
+            val movimiento = movimientoCategoria.movimiento
             MovimientoItem(
-                    movimiento = movimiento,
+                    movimientoCategoria = movimientoCategoria,
                     onEditClick = { onEditClick(movimiento.id) },
                     onDeleteClick = { movimientoViewModel.deleteMovimiento(movimiento) }
             )
@@ -146,31 +147,33 @@ fun HomeScreen(
 }
 
 @Composable
-fun MovimientoItem(movimiento: Movimiento, onEditClick: () -> Unit, onDeleteClick: () -> Unit) {
+fun MovimientoItem(movimientoCategoria: MovimientoCategoria, onEditClick: () -> Unit, onDeleteClick: () -> Unit) {
+  val movimiento = movimientoCategoria.movimiento
+  val categoria = movimientoCategoria.categoria
+
   Card(
-          modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-          elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
   ) {
     Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+      modifier = Modifier.fillMaxWidth().padding(16.dp),
+      verticalAlignment = Alignment.CenterVertically
     ) {
       Column(modifier = Modifier.weight(1f)) {
         Text(text = movimiento.descripcion, fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Text(
-                text = "Categoría: ${movimiento.categoria}",
-                style = MaterialTheme.typography.bodySmall
+          text = "Categoría: ${categoria.nombre}",
+          style = MaterialTheme.typography.bodySmall
         )
         Text(text = formatDate(movimiento.fecha), style = MaterialTheme.typography.bodySmall)
       }
       Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Center) {
         val textColor = if (movimiento.tipo == MovimientoType.INGRESO) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error
         Text(
-                text =
-                        "${if (movimiento.tipo == MovimientoType.INGRESO) "+" else "-"} S/ ${"%.2f".format(movimiento.monto)}",
-                fontWeight = FontWeight.ExtraBold,
-                color = textColor,
-                fontSize = 18.sp
+          text = "${if (movimiento.tipo == MovimientoType.INGRESO) "+" else "-"} S/ ${"%.2f".format(movimiento.monto)}",
+          fontWeight = FontWeight.ExtraBold,
+          color = textColor,
+          fontSize = 18.sp
         )
         Row {
           IconButton(onClick = onEditClick) {

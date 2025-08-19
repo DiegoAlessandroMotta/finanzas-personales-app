@@ -25,6 +25,6 @@ interface CategoriaDao {
 	@Query("SELECT * FROM categorias WHERE nombre = :nombre AND isDeleted = 0 LIMIT 1")
 	suspend fun getCategoriaByName(nombre: String): Categoria?
 
-	@Query("SELECT COUNT(*) FROM movimientos WHERE categoria = :categoriaNombre")
-	suspend fun countMovimientosByCategoria(categoriaNombre: String): Int
+	@Query("SELECT COUNT(*) FROM movimientos WHERE categoriaId = :categoriaId")
+	suspend fun countMovimientosByCategoria(categoriaId: Int): Int
 }
