@@ -33,14 +33,27 @@ fun HomeScreen(
   onEditClick: (Int) -> Unit,
   onManageCategoriesClick: () -> Unit
 ) {
-  val totalIngresos by movimientoViewModel.totalIngresos.collectAsState()
-  val totalEgresos by movimientoViewModel.totalEgresos.collectAsState()
   val filteredMovimientos by movimientoViewModel.filteredMovimientosCategorias.collectAsState()
 
+  val totalIngresos = remember(filteredMovimientos) {
+    filteredMovimientos
+      .filter { it.movimiento.tipo == MovimientoType.INGRESO }
+      .sumOf { it.movimiento.monto }
+  }
+  val totalEgresos = remember(filteredMovimientos) {
+    filteredMovimientos
+      .filter { it.movimiento.tipo == MovimientoType.EGRESO }
+      .sumOf { it.movimiento.monto }
+  }
+  val saldoNeto = remember(totalIngresos, totalEgresos) {
+    totalIngresos - totalEgresos
+  }
+
   val allCategorias by categoriaViewModel.allActiveCategorias.collectAsState()
-  var selectedFilterCategoriaId by remember { mutableStateOf<Int?>(null) }
   var selectedFilterCategoryNameDisplay by remember { mutableStateOf("Todas las categorías") }
   var expandedFilterCategories by remember { mutableStateOf(false) }
+
+
 
   Scaffold(
           topBar = {
@@ -82,7 +95,7 @@ fun HomeScreen(
           ) {
             Text("Ingresos:", fontWeight = FontWeight.SemiBold)
             Text(
-                    "S/ ${"%.2f".format(totalIngresos ?: 0.0)}",
+                    "S/ ${"%.2f".format(totalIngresos)}",
                     color = Color.LightGray,
                     fontWeight = FontWeight.Bold
             )
@@ -94,7 +107,7 @@ fun HomeScreen(
           ) {
             Text("Egresos:", fontWeight = FontWeight.SemiBold)
             Text(
-                    "S/ ${"%.2f".format(totalEgresos ?: 0.0)}",
+                    "S/ ${"%.2f".format(totalEgresos)}",
                     color = MaterialTheme.colorScheme.error,
                     fontWeight = FontWeight.Bold
             )
@@ -107,7 +120,6 @@ fun HomeScreen(
                   horizontalArrangement = Arrangement.SpaceBetween
           ) {
             Text("Saldo Neto:", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
-            val saldoNeto = (totalIngresos ?: 0.0) - (totalEgresos ?: 0.0)
             Text(
                     "S/ ${"%.2f".format(saldoNeto)}",
                     color = if (saldoNeto >= 0) Color.White else MaterialTheme.colorScheme.error,
@@ -143,7 +155,6 @@ fun HomeScreen(
           DropdownMenuItem(
             text = { Text("Todas las categorías") },
             onClick = {
-              selectedFilterCategoriaId = null
               selectedFilterCategoryNameDisplay = "Todas las categorías"
               movimientoViewModel.filterByCategory(null)
               expandedFilterCategories = false
@@ -154,7 +165,6 @@ fun HomeScreen(
             DropdownMenuItem(
               text = { Text(categoria.nombre) },
               onClick = {
-                selectedFilterCategoriaId = categoria.id
                 selectedFilterCategoryNameDisplay = categoria.nombre
                 movimientoViewModel.filterByCategory(categoria.id)
                 expandedFilterCategories = false
