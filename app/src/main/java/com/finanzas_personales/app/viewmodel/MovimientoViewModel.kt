@@ -16,25 +16,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class MovimientoViewModel(private val repository: MovimientoRepository) : ViewModel() {
-  val allMovimientos: StateFlow<List<MovimientoCategoria>> =
-          repository.allMovimientos.stateIn(
-                  viewModelScope,
-                  started = SharingStarted.WhileSubscribed(5000),
-                  initialValue = emptyList()
-          )
-  val totalIngresos: StateFlow<Double?> =
-          repository.totalIngresos.stateIn(
-                  viewModelScope,
-                  started = SharingStarted.WhileSubscribed(5000),
-                  initialValue = 0.0
-          )
-  val totalEgresos: StateFlow<Double?> =
-          repository.totalEgresos.stateIn(
-                  viewModelScope,
-                  started = SharingStarted.WhileSubscribed(5000),
-                  initialValue = 0.0
-          )
-
   private val _currentMovimiento = MutableStateFlow<Movimiento?>(null)
   val currentMovimiento: StateFlow<Movimiento?> = _currentMovimiento.asStateFlow()
 

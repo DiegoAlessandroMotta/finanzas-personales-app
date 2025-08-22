@@ -27,14 +27,6 @@ class MovimientoRepository(private val movimientoDao: MovimientoDao) {
     return movimientoDao.getMovimientoById(id)
   }
 
-  fun getMovimientosByTipo(tipo: String): Flow<List<Movimiento>> {
-    return movimientoDao.getMovimientosByTipo(tipo)
-  }
-
-  fun getMovimientosByCategoria(categoriaId: Int): Flow<List<Movimiento>> {
-    return movimientoDao.getMovimientosByCategoria(categoriaId)
-  }
-
   fun getMovimientosByTipoConCategorias(tipo: String): Flow<List<MovimientoCategoria>> {
     return movimientoDao.getMovimientosByTipoCategorias(tipo)
   }
