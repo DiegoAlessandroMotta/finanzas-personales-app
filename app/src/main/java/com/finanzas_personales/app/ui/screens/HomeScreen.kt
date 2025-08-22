@@ -9,9 +9,7 @@ import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,10 +33,14 @@ fun HomeScreen(
   onEditClick: (Int) -> Unit,
   onManageCategoriesClick: () -> Unit
 ) {
-  // val allMovimientos by viewModel.allMovimientos.collectAsState()
   val totalIngresos by movimientoViewModel.totalIngresos.collectAsState()
   val totalEgresos by movimientoViewModel.totalEgresos.collectAsState()
   val filteredMovimientos by movimientoViewModel.filteredMovimientosCategorias.collectAsState()
+
+  val allCategorias by categoriaViewModel.allActiveCategorias.collectAsState()
+  var selectedFilterCategoriaId by remember { mutableStateOf<Int?>(null) }
+  var selectedFilterCategoryNameDisplay by remember { mutableStateOf("Todas las categorías") }
+  var expandedFilterCategories by remember { mutableStateOf(false) }
 
   Scaffold(
           topBar = {
@@ -116,7 +118,52 @@ fun HomeScreen(
         }
       }
 
-      // Text("Filtros aquí...", modifier = Modifier.padding(bottom = 8.dp))
+      ExposedDropdownMenuBox(
+        expanded = expandedFilterCategories,
+        onExpandedChange = { expandedFilterCategories = !expandedFilterCategories },
+        modifier = Modifier.fillMaxWidth()
+      ) {
+        OutlinedTextField(
+          value = selectedFilterCategoryNameDisplay,
+          onValueChange = { },
+          readOnly = true,
+          label = { Text("Filtrar por Categoría") },
+          trailingIcon = {
+            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedFilterCategories)
+          },
+          modifier = Modifier
+            .menuAnchor(MenuAnchorType.PrimaryEditable, true)
+            .fillMaxWidth()
+        )
+
+        ExposedDropdownMenu(
+          expanded = expandedFilterCategories,
+          onDismissRequest = { expandedFilterCategories = false }
+        ) {
+          DropdownMenuItem(
+            text = { Text("Todas las categorías") },
+            onClick = {
+              selectedFilterCategoriaId = null
+              selectedFilterCategoryNameDisplay = "Todas las categorías"
+              movimientoViewModel.filterByCategory(null)
+              expandedFilterCategories = false
+            }
+          )
+          HorizontalDivider()
+          allCategorias.forEach { categoria ->
+            DropdownMenuItem(
+              text = { Text(categoria.nombre) },
+              onClick = {
+                selectedFilterCategoriaId = categoria.id
+                selectedFilterCategoryNameDisplay = categoria.nombre
+                movimientoViewModel.filterByCategory(categoria.id)
+                expandedFilterCategories = false
+              }
+            )
+          }
+        }
+      }
+      Spacer(modifier = Modifier.height(16.dp))
 
       Text(
               "Movimientos Recientes",

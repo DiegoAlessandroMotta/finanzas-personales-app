@@ -31,7 +31,6 @@ fun MovimientoFormScreen(
         onBackClick: () -> Unit
 ) {
   val context = LocalContext.current
-  val scope = rememberCoroutineScope()
   var tipo by remember { mutableStateOf(MovimientoType.INGRESO) }
   var monto by remember { mutableStateOf("") }
   var descripcion by remember { mutableStateOf("") }

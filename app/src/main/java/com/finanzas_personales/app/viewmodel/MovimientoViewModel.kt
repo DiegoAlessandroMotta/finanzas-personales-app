@@ -69,21 +69,8 @@ class MovimientoViewModel(private val repository: MovimientoRepository) : ViewMo
     _currentMovimiento.value = null
   }
 
-  private val _filteredMovimientos = MutableStateFlow<List<Movimiento>>(emptyList())
-  val filteredMovimientos: StateFlow<List<Movimiento>> = _filteredMovimientos.asStateFlow()
-
   init {
     viewModelScope.launch { repository.allMovimientos.collect { _filteredMovimientosCategorias.value = it } }
-  }
-
-  fun filterByType(tipo: MovimientoType?) {
-    viewModelScope.launch {
-      if (tipo == null) {
-        _filteredMovimientosCategorias.value = repository.allMovimientos.first()
-      } else {
-        repository.getMovimientosByTipo(tipo.value).collect { _filteredMovimientos.value = it }
-      }
-    }
   }
 
   fun filterByCategory(categoriaId: Int?) {
@@ -91,7 +78,7 @@ class MovimientoViewModel(private val repository: MovimientoRepository) : ViewMo
       if (categoriaId == null) {
         _filteredMovimientosCategorias.value = repository.allMovimientos.first()
       } else {
-        repository.getMovimientosByCategoria(categoriaId).collect { _filteredMovimientos.value = it }
+        repository.getMovimientosByCategoriaIdConCategorias(categoriaId).collect { _filteredMovimientosCategorias.value = it }
       }
     }
   }
